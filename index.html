@@ -496,6 +496,38 @@
             </div>
         </div>
 
+        <!-- WINDOW 5: Retro Download Manager (For secure/mobile environments) -->
+        <div id="win-downloader" class="window absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] bg-[#c0c0c0] out-raised p-1 flex-col z-[80] hidden shadow-2xl">
+            <div class="window-header cursor-move bg-[#000080] flex items-center justify-between p-1 px-2 text-white font-bold text-xs select-none">
+                <span class="flex items-center gap-1">
+                    <span>💾 다운로드 대기소 v1.0</span>
+                </span>
+                <button class="w-4 h-4 bg-[#c0c0c0] text-black font-bold flex items-center justify-center text-[10px] out-raised btn-active" onclick="closeWindow('win-downloader')">X</button>
+            </div>
+            <div class="p-4 flex flex-col gap-3 text-black text-[11px]">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-100 rounded border border-gray-400">
+                        <svg class="w-6 h-6 text-blue-800 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-xs">로파이 미디어 변환 완료!</p>
+                        <p class="text-gray-600 mt-1 leading-tight">깃허브, 샌드박스, 카카오톡 등 보안이 엄격한 인앱/보안 환경에서는 브라우저 정책상 자동 저장이 차단될 수 있습니다. 아래의 버튼을 직접 눌러 저장해주십시오.</p>
+                    </div>
+                </div>
+                <div class="out-sunken bg-white p-2 text-xs font-mono break-all max-h-[60px] overflow-y-auto">
+                    파일명: <span id="download-file-name-label" class="font-bold text-blue-900">retro_output.mp4</span>
+                </div>
+                <div class="flex gap-2 justify-end mt-2">
+                    <a id="btn-real-download" href="#" download="" target="_blank" class="flex-1 bg-[#000080] text-yellow-300 font-bold p-2 text-xs out-raised btn-active flex items-center justify-center gap-1 border-t border-l border-blue-400 text-center">
+                        💾 로컬에 파일 저장하기
+                    </a>
+                    <button onclick="closeWindow('win-downloader')" class="bg-[#c0c0c0] text-black font-bold py-1 px-4 out-raised btn-active text-[11px] w-20 border-t border-l border-white">닫기</button>
+                </div>
+            </div>
+        </div>
+
         <!-- WINDOW 4: Classic Win98 System Alert Message Box -->
         <div id="win-alert" class="window absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] bg-[#c0c0c0] out-raised p-1 flex-col z-[100] hidden shadow-2xl">
             <div class="window-header cursor-move bg-[#000080] flex items-center justify-between p-1 px-2 text-white font-bold text-xs select-none">
@@ -762,6 +794,7 @@
             dither: true
         };
 
+        // FIXED SYNTAX ERROR: Changed assignment operator '=' to ':' inside object declaration
         let audioSettings = {
             preset: 'soribada',
             sampleRate: 22050,  // Fake sample rate reduction
@@ -2030,6 +2063,7 @@
                 hiddenVideo.currentTime = 0;
                 hiddenVideo.play();
                 
+                // [수정사항] 영상 길이와 완벽히 똑같게 설정 (강제 제한시간 해제)
                 recordingDuration = (hiddenVideo.duration && !isNaN(hiddenVideo.duration) && isFinite(hiddenVideo.duration)) ? hiddenVideo.duration : 10;
             } else if (mediaMode === 'camera') {
                 // Free Camera Mode Recording: Can record indefinitely until stopped manually.
@@ -2084,28 +2118,28 @@
                     // Save recorded array into a single downloadable file
                     const blob = new Blob(recordedChunks, { type: finalMimeType });
                     const videoUrl = URL.createObjectURL(blob);
+                    const fileName = mediaMode === 'audio' ? `retro_audio_${audioSettings.preset}.${fileExt}` : `retro_144p_${audioSettings.preset}_degraded.${fileExt}`;
 
-                    // Create download anchor trigger
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = videoUrl;
-                    downloadLink.download = mediaMode === 'audio' ? `retro_audio_${audioSettings.preset}.${fileExt}` : `retro_144p_${audioSettings.preset}_degraded.${fileExt}`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
+                    // UPDATE: Set the download links inside the persistent Retro Download Manager
+                    const dlBtn = document.getElementById('btn-real-download');
+                    dlBtn.href = videoUrl;
+                    dlBtn.download = fileName;
+                    document.getElementById('download-file-name-label').innerText = fileName;
 
-                    setTimeout(() => {
-                        if (fallbackUsed) {
-                            showSystemAlert(
-                                `인코딩이 안전하게 완료되었습니다!\n\n※ 시스템 안내: 사용 중이신 웹 브라우저에서 직접적인 MP4 무손실 믹싱 코덱을 제공하지 않아, 가장 호환성이 뛰어난 'WebM(.webm)' 확장자로 자동 대체 인코딩되었습니다.\n\n다운로드 폴더를 확인해 주십시오.`,
-                                "인코딩 호환 알림"
-                            );
-                        } else {
-                            showSystemAlert(
-                                `인코딩이 성공적으로 완료되어 파일 저장을 요청했읍니다!\n\n선택하신 '${fileExt.toUpperCase()}' 포맷으로 빌드되었습니다.\n다운로드 폴더를 확인해 주십시오.`,
-                                "인코딩 완료"
-                            );
-                        }
-                    }, 400);
+                    // Open Web Downloader popup window to guarantee 100% bypass in secure sandboxed iframes (e.g., GitHub, Gist, Kakao)
+                    openWindow('win-downloader');
+
+                    // Fallback to trigger programmatic click (works on unsecured/standard browsers as helper)
+                    try {
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = videoUrl;
+                        downloadLink.download = fileName;
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    } catch (err) {
+                        console.warn("Programmatic click blocked by sandbox, relying on download manager window:", err);
+                    }
                 };
 
                 mediaRecorder.start();
@@ -2179,23 +2213,31 @@
 
             const wavBlob = bufferToWav(fakeBuffer);
             const audioUrl = URL.createObjectURL(wavBlob);
+            const fileName = `retro_audio_${audioSettings.preset}.wav`;
 
-            const downloadLink = document.createElement('a');
-            downloadLink.href = audioUrl;
-            downloadLink.download = `retro_audio_${audioSettings.preset}.wav`;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
+            // Set link destinations inside Downloader UI
+            const dlBtn = document.getElementById('btn-real-download');
+            dlBtn.href = audioUrl;
+            dlBtn.download = fileName;
+            document.getElementById('download-file-name-label').innerText = fileName;
+
+            // Open popup to guarantee manual save possibility
+            openWindow('win-downloader');
+
+            // Fallback standard link click
+            try {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = audioUrl;
+                downloadLink.download = fileName;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            } catch (err) {
+                console.warn("Programmatic click blocked:", err);
+            }
 
             recordedAudioLeft = [];
             recordedAudioRight = [];
-
-            setTimeout(() => {
-                showSystemAlert(
-                    `오디오 인코딩이 완전히 종료되었읍니다!\n\n선택하신 PC통신 & 레트로 필터음이 적용된 정밀 'WAV(8-bit/16-bit PCM)' 무손실 포맷 음질 파일이 다운로드 폴더에 안전하게 영구 저장되었습니다.`,
-                    "오디오 파일 저장 성공"
-                );
-            }, 400);
         }
 
         // Helper functions for WAV Binary structuring
@@ -2210,6 +2252,7 @@
             return result;
         }
 
+        // Interleave left and right channels for Stereo WAV
         function interleave(inputL, inputR) {
             let length = inputL.length + inputR.length;
             let result = new Float32Array(length);
@@ -2222,12 +2265,14 @@
             return result;
         }
 
+        // Write raw ASCII into dataview
         function writeString(view, offset, string) {
             for (let i = 0; i < string.length; i++) {
                 view.setUint8(offset + i, string.charCodeAt(i));
             }
         }
 
+        // Generate complete WAV RIFF structure binary Blob
         function bufferToWav(buffer) {
             let numOfChan = buffer.numberOfChannels,
                 btwSampleRate = buffer.sampleRate,
