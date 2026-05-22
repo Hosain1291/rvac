@@ -263,8 +263,8 @@
 
                     <!-- Hidden Elements for Processing -->
                     <input type="file" id="video-file-picker" accept="video/*, audio/*" class="hidden" onchange="handleVideoFile(event)">
-                    <!-- UNMUTE PROCESSOR: Removed muted attribute so that Web Audio API can receive the real audio channel from the video -->
-                    <video id="hidden-video-player" class="hidden" loop></video>
+                    <!-- MOBILE OPTIMIZATION: Replaced class="hidden" (display:none) with an off-screen styling to prevent iOS/Android suspends, and added playsinline tags -->
+                    <video id="hidden-video-player" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;" playsinline webkit-playsinline loop></video>
 
                     <!-- Winamp-like Media & Visualizer Bar -->
                     <div class="bg-[#222] p-2 out-raised border border-t-white border-l-white flex flex-col gap-2 text-[#00ff00] font-mono text-xs">
@@ -1533,7 +1533,7 @@
             // Wait for video/audio meta to initialize audio source node
             hiddenVideo.onloadedmetadata = function() {
                 initAudioContext();
-                audioCtx.resume();
+                if (audioCtx) audioCtx.resume();
 
                 // BUG FIX: HTMLMediaElement can only be associated with MediaElementSourceNode ONCE.
                 if (!videoSourceNode) {
@@ -1542,8 +1542,11 @@
                 
                 rebuildAudioGraph(videoSourceNode);
                 
-                // Set status and play
-                playMedia();
+                // MOBILE GESTURE BYPASS:
+                // To avoid browser autoplay restriction blocks on mobile & KakaoTalk WebView,
+                // instead of playing automatically, we transition to a ready state, prompting a manual touch.
+                isPlaying = false;
+                document.getElementById('player-status').innerText = "상태: 준비 완료 (▶ 재생 버튼을 누르십시오)";
             };
         }
 
@@ -1831,12 +1834,25 @@
             }
 
             initAudioContext();
-            audioCtx.resume();
+            if (audioCtx) audioCtx.resume();
             isPlaying = true;
 
             if (mediaMode === 'file' || mediaMode === 'audio') {
                 hiddenVideo.muted = false; // Double-check unmuted state so that sound outputs to Web Audio Graph
-                hiddenVideo.play();
+                
+                // GESTURE BYPASS PROMISE: Attempt to play and catch gesture permission blocks gracefully
+                const playPromise = hiddenVideo.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(err => {
+                        console.warn("Autoplay blocked by mobile browser gesture policy:", err);
+                        // Fallback to muted playback so that canvas frame loop doesn't freeze
+                        hiddenVideo.muted = true;
+                        hiddenVideo.play().catch(e => {
+                            isPlaying = false;
+                            document.getElementById('player-status').innerText = "상태: 재생 실패 (다시 한번 터치해 주십시오)";
+                        });
+                    });
+                }
                 document.getElementById('player-status').innerText = mediaMode === 'audio' ? "상태: 재생 중 (Winamp 모드)" : "상태: 재생 중 (파일)";
             } else if (mediaMode === 'camera') {
                 hiddenVideo.play();
@@ -1990,7 +2006,7 @@
             let statusStr = "미디어 주파수 분석 및 주사선 렌더링 중...";
             if (audioSettings.preset === 'pctalk') statusStr = "PC통신 하이텔 호스트 회선 접속 및 8-bit PCM 패킷 변환 중...";
             if (audioSettings.preset === 'modem') statusStr = "모뎀 연결 시도 및 56k 대역폭으로 미디어 주파수 필터 가공 중...";
-            if (audioSettings.preset === 'soribada') statusStr = "소리바다 공유 프로토콜 가동 및 MP3 압축 청크 버즈 노이즈 합성 중...";
+            if (audioSettings.preset === 'soribada') statusStr = "소리바다 공유 프로토콜 가동 및 MP3 압축 청크 패싱 중...";
             document.getElementById('encode-status-msg').innerText = statusStr;
 
             isEncoding = true;
