@@ -110,7 +110,7 @@
                 overflow-y: auto !important;
                 height: auto !important;
                 min-height: calc(100vh - 40px);
-                padding: 12px 12px 75px 12px !important; /* Safe padding for fixed taskbar */
+                padding: 12px 12px 75px 12px !important;
                 display: flex;
                 flex-direction: column;
             }
@@ -221,7 +221,7 @@
                         <circle cx="8" cy="10" r="2" fill="#000"/>
                         <polygon points="6,15 18,15 12,18" fill="#f00"/>
                     </svg>
-                    <span>90-00년대 감성 저화질 비데오/음악 변환기 v1.6</span>
+                    <span>90-00년대 감성 저화질 비데오/음악 변환기 v1.7</span>
                 </div>
                 <div class="flex gap-1">
                     <button class="w-4 h-4 bg-[#c0c0c0] text-black font-bold flex items-center justify-center text-[10px] out-raised btn-active" onclick="minimizeWindow('win-converter')">_</button>
@@ -247,8 +247,8 @@
                         <span id="current-filename" class="text-xs text-gray-400">파일을 선택해주세요</span>
                     </div>
 
-                    <!-- Output CRT Monitor Canvas Container -->
-                    <div class="relative bg-black out-sunken border-4 border-black aspect-video flex items-center justify-center overflow-hidden crt-overlay crt-flicker">
+                    <!-- Output CRT Monitor Canvas Container (Dynamic Aspect Ratio Support) -->
+                    <div id="crt-container" class="relative bg-black out-sunken border-4 border-black flex items-center justify-center overflow-hidden crt-overlay crt-flicker transition-all duration-300" style="aspect-ratio: 4/3;">
                         <!-- Output Canvas -->
                         <canvas id="output-canvas" class="w-full h-full pixelated bg-neutral-900 object-contain"></canvas>
                         
@@ -263,7 +263,6 @@
 
                     <!-- Hidden Elements for Processing -->
                     <input type="file" id="video-file-picker" accept="video/*, audio/*" class="hidden" onchange="handleVideoFile(event)">
-                    <!-- MOBILE OPTIMIZATION: Replaced class="hidden" (display:none) with an off-screen styling to prevent iOS/Android suspends, and added playsinline tags -->
                     <video id="hidden-video-player" style="position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.01; pointer-events: none;" playsinline webkit-playsinline loop></video>
 
                     <!-- Winamp-like Media & Visualizer Bar -->
@@ -281,7 +280,7 @@
                             </div>
                         </div>
 
-                        <!-- Controller Controls (Upgraded with Camera toggle and mobile flex wrapping) -->
+                        <!-- Controller Controls -->
                         <div class="flex flex-wrap gap-1 justify-center bg-[#c0c0c0] p-1 border-t border-b border-gray-600 rounded">
                             <button onclick="playMedia()" class="flex-1 min-w-[55px] bg-[#c0c0c0] text-black font-bold p-1 out-raised btn-active text-[10px] flex items-center justify-center gap-1">
                                 <span class="text-xs">▶</span> 재생
@@ -340,6 +339,16 @@
                                 <option value="240">240p (플래시 엽기송)</option>
                                 <option value="360">360p (90년대 말 VHS)</option>
                                 <option value="original">Original</option>
+                            </select>
+                        </div>
+
+                        <!-- Aspect Ratio Select (NEW FEATURE) -->
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span>화면 비율:</span>
+                            <select id="select-aspect" class="p-0.5 out-sunken bg-white text-black border-none text-[11px] w-[140px]" onchange="updateVideoSettings()">
+                                <option value="4:3" selected>4:3 (고전 브라운관)</option>
+                                <option value="16:9">16:9 (와이드 스크린)</option>
+                                <option value="original">Original (원본 비율)</option>
                             </select>
                         </div>
 
@@ -451,7 +460,7 @@
             <!-- Notepad content -->
             <div class="bg-white text-black p-3 font-mono text-[11px] leading-relaxed out-sunken overflow-y-auto h-[260px]">
                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br>
-                비데오 및 오디오 저화질 변환기 v1.6<br>
+                비데오 및 오디오 저화질 변환기 v1.7<br>
                 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<br><br>
                 안녕 하십니까... 본 프로그람은 1990년대 중반부터 2000년대 중반<br>
                 까지의 추억의 로-파이(Lo-Fi) 디지털 미디어 압축방식을 그대로<br>
@@ -462,8 +471,8 @@
                 [조작법]<br>
                 1. [파일 열기] 버튼으로 비디오 파일뿐만 아니라 MP3, WAV 등 본인의 음악 파일도 직접 올립니다.<br>
                 2. 음악 파일이 로드되면 CRT 화면에 실시간 회전하는 클래식 컴팩트 카세트 테이프가 생성됩니다.<br>
-                3. 우측 제어판에서 압축 음질 수동 선택 및 레트로 프리셋을 결정합니다.<br>
-                4. [파일 인코딩 및 내보내기] 버튼을 누르면 인코딩 및 다이렉트 변환된 파일(비디오의 경우 .mp4, 음악의 경우 레트로 규격의 실시간 .wav 혹은 .mp3)이 컴퓨터로 자동 전송 저장됩니다.<br><br>
+                3. 우측 제어판에서 압축 음질 수동 선택, 화면 비율(4:3 브라운관 / 16:9 와이드) 및 레트로 프리셋을 결정합니다.<br>
+                4. [파일 인코딩 및 내보내기] 버튼을 누르면 인코딩 및 다이렉트 변환된 파일이 컴퓨터로 자동 전송 저장됩니다.<br><br>
                 제작년도: 2026년 여름 (90년대 레트로 사랑방)
             </div>
         </div>
@@ -618,6 +627,38 @@
     </div>
 
     <script>
+        // Global functions registered explicitly on window to prevent ReferenceErrors
+        window.openWindow = function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.display = 'flex';
+                bringToFront(el);
+            }
+        };
+
+        window.closeWindow = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        };
+
+        window.minimizeWindow = function(id) {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        };
+
+        window.toggleStartMenu = function() {
+            const menu = document.getElementById('start-menu');
+            if (menu) menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+        };
+
+        window.focusWindow = function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.style.display = 'flex';
+                bringToFront(el);
+            }
+        };
+
         // System Clock Logic
         function updateClock() {
             const now = new Date();
@@ -625,24 +666,29 @@
             let minutes = now.getMinutes();
             if (hours < 10) hours = '0' + hours;
             if (minutes < 10) minutes = '0' + minutes;
-            document.getElementById('systime').innerText = `${hours}:${minutes}`;
+            const el = document.getElementById('systime');
+            if (el) el.innerText = `${hours}:${minutes}`;
         }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Custom Window Alert Implementation (Replaces native alert() cleanly)
-        function showSystemAlert(msg, title = "시스템 안내") {
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-message-text').innerText = msg;
+        // Custom Window Alert Implementation
+        window.showSystemAlert = function(msg, title = "시스템 안내") {
+            const titleEl = document.getElementById('alert-title');
+            const msgEl = document.getElementById('alert-message-text');
+            if (titleEl) titleEl.innerText = title;
+            if (msgEl) msgEl.innerText = msg;
             const el = document.getElementById('win-alert');
-            el.style.display = 'flex';
-            bringToFront(el);
-        }
+            if (el) {
+                el.style.display = 'flex';
+                bringToFront(el);
+            }
+        };
 
-        // Custom alert close handle
-        function closeSystemAlert() {
-            document.getElementById('win-alert').style.display = 'none';
-        }
+        window.closeSystemAlert = function() {
+            const el = document.getElementById('win-alert');
+            if (el) el.style.display = 'none';
+        };
 
         // Draggable Windows Logic
         let activeWindow = null;
@@ -680,7 +726,7 @@
 
         window.addEventListener('mousemove', (e) => {
             if (!isDragging || !activeWindow) return;
-            if (window.innerWidth < 768) return; // Disable dragging movements on mobile layout to allow natural page scrolling
+            if (window.innerWidth < 768) return;
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
             activeWindow.style.left = `${origX + dx}px`;
@@ -689,7 +735,7 @@
 
         window.addEventListener('touchmove', (e) => {
             if (!isDragging || !activeWindow) return;
-            if (window.innerWidth < 768) return; // Disable dragging movements on mobile layout to allow natural page scrolling
+            if (window.innerWidth < 768) return;
             const dx = e.touches[0].clientX - startX;
             const dy = e.touches[0].clientY - startY;
             activeWindow.style.left = `${origX + dx}px`;
@@ -705,9 +751,8 @@
             zIndexCounter++;
             winEl.style.zIndex = zIndexCounter;
             
-            // Toggle highlight color in blue for active window
             document.querySelectorAll('.window').forEach(w => {
-                if (w.id !== 'win-alert') { // Keep alert window style focused if open
+                if (w.id !== 'win-alert') {
                     w.classList.remove('active-window');
                     const h = w.querySelector('.window-header');
                     if (h) {
@@ -730,72 +775,48 @@
             win.addEventListener('touchstart', () => bringToFront(win), { passive: true });
         });
 
-        // Window controls
-        function openWindow(id) {
-            const el = document.getElementById(id);
-            el.style.display = 'flex';
-            bringToFront(el);
-        }
-        function closeWindow(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-        function minimizeWindow(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-        function toggleStartMenu() {
-            const menu = document.getElementById('start-menu');
-            menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
-        }
-        function focusWindow(id) {
-            const el = document.getElementById(id);
-            el.style.display = 'flex';
-            bringToFront(el);
-        }
-
         // ==========================================
         //  CORE AUDIO & VIDEO PROCESSING ENGINE
         // ==========================================
-        let audioCtx = null;
-        let videoSourceNode = null;
-        let cameraSourceNode = null; // webcam source node
-        let dspNode = null;          // Custom script processor node for downsampling & audio quantization (8-bit PCM etc.)
-        let audioFilter = null;       // Bandpass filter
-        let audioFilter2 = null;      // Lowpass filter for high-cut
-        let mainAnalyser = null;      // For visualizer
-        let monitorGainNode = null;   // howling protection monitor node
-        let destStreamNode = null;    // Audio stream sink for recording
+        var audioCtx = null;
+        var videoSourceNode = null;
+        var cameraSourceNode = null;
+        var dspNode = null;
+        var audioFilter = null;
+        var audioFilter2 = null;
+        var mainAnalyser = null;
+        var monitorGainNode = null;
+        var destStreamNode = null;
 
         const hiddenVideo = document.getElementById('hidden-video-player');
         const outputCanvas = document.getElementById('output-canvas');
-        const hiddenCanvas = document.createElement('canvas'); // Temp canvas for low-res downscaling
+        const hiddenCanvas = document.createElement('canvas');
         const outCtx = outputCanvas.getContext('2d');
         const hidCtx = hiddenCanvas.getContext('2d');
 
-        // Current system state and user settings
-        let mediaMode = 'none'; // 'file', 'demo', 'camera', 'audio', 'none'
-        let isPlaying = false;
-        let demoSynthInterval = null; // Background music loop generator
-        let cameraStream = null;      // webcam media tracks stream
-        let renderLoopId = null;
-        let lastFrameTime = 0;
-        let tapeGearRotation = 0;     // compact cassette gear rotation value
+        var mediaMode = 'none'; // 'file', 'demo', 'camera', 'audio', 'none'
+        var isPlaying = false;
+        var demoSynthInterval = null;
+        var cameraStream = null;
+        var renderLoopId = null;
+        var lastFrameTime = 0;
+        var tapeGearRotation = 0;
 
-        // Buffer pools for local WAV audio recording
-        let recordedAudioLeft = [];
-        let recordedAudioRight = [];
+        var recordedAudioLeft = [];
+        var recordedAudioRight = [];
 
-        // Custom DSP Variables (controlled by UI)
-        let videoSettings = {
-            resWidth: 176,
+        var videoSettings = {
+            resWidth: 192,
             resHeight: 144,
             fps: 15,
-            colorDepth: 'retro8', // 'full', 'high', 'retro8', 'retro4'
+            colorDepth: 'retro8',
             scanlines: true,
-            dither: true
+            dither: true,
+            aspectRatio: '4:3'
         };
 
-        // FIXED SYNTAX ERROR: Changed assignment operator '=' to ':' inside object declaration
-        let audioSettings = {
+        // FIXED SYNTAX: Used correct key-value colon syntax instead of assignment operator
+        var audioSettings = {
             preset: 'soribada',
             sampleRate: 22050,  // Fake sample rate reduction
             bitDepth: 10,       // Audio bit reduction
@@ -831,7 +852,7 @@
             [255, 255, 255]  // White
         ];
 
-        // Built-in Synthwave Synthesizer Background Music (to dodge CORS issues completely)
+        // Built-in Synthwave Synthesizer Background Music
         let demoTempo = 115;
         let demoStep = 0;
         let synthGainNode = null;
@@ -853,7 +874,6 @@
             audioFilter2.frequency.value = 8500;
 
             // Script processor node for precise sample quantization (Bitcrusher)
-            // Using 4096 buffer size for stable legacy DSP
             dspNode = audioCtx.createScriptProcessor(4096, 2, 2);
             dspNode.onaudioprocess = handleAudioDSP;
 
@@ -865,12 +885,9 @@
             monitorGainNode = audioCtx.createGain();
             monitorGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
 
-            // Route audio graph: Source -> Filter -> ScriptProcessor -> Visualizer -> Destination
-            // Note: Nodes will be dynamically bypassed depending on configuration.
             destStreamNode = audioCtx.createMediaStreamDestination();
         }
 
-        // Real-time custom DSP logic simulating bitcrushing, sampling downrate and MP3 ringing
         function handleAudioDSP(e) {
             const inputBuffer = e.inputBuffer;
             const outputBuffer = e.outputBuffer;
@@ -882,7 +899,6 @@
                 const inputData = inputBuffer.getChannelData(channel);
                 const outputData = outputBuffer.getChannelData(channel);
 
-                // Use left channel if Mono is selected
                 let sourceData = inputData;
                 if (audioSettings.mono && channel > 0) {
                     sourceData = inputBuffer.getChannelData(0);
@@ -890,24 +906,19 @@
 
                 let lastSampleVal = 0;
                 for (let i = 0; i < inputBuffer.length; i++) {
-                    // 1. Sample Rate Downscaling (Zero-order hold step)
                     if (i % stepSize === 0) {
                         lastSampleVal = sourceData[i];
                     }
                     let value = lastSampleVal;
 
-                    // 2. Audio Bit depth quantization (e.g. 8-bit PCM distortion)
                     if (audioSettings.bitDepth < 16) {
                         value = Math.round(value * levels) / levels;
                     }
 
-                    // 3. MP3 Ringing pre-echo artifact emulator
-                    // Injects metal-like feedback ringing on high dynamics
                     if (audioSettings.mp3Artifacts) {
                         const feedbackSamples = 14; 
                         const delayVal = (i >= feedbackSamples) ? outputData[i - feedbackSamples] : 0;
                         value += delayVal * 0.42;
-                        // Avoid hard clip
                         if (value > 1.0) value = 1.0;
                         if (value < -1.0) value = -1.0;
                     }
@@ -916,7 +927,6 @@
                 }
             }
 
-            // Real-time sample recording collector for direct WAV conversions (high accuracy lossless capture)
             if (isEncoding && mediaMode === 'audio') {
                 recordedAudioLeft.push(new Float32Array(outputBuffer.getChannelData(0)));
                 recordedAudioRight.push(new Float32Array(outputBuffer.getChannelData(1)));
@@ -926,7 +936,6 @@
         function rebuildAudioGraph(sourceNodeInstance) {
             if (!audioCtx) return;
 
-            // Disconnect everything safely first
             try {
                 sourceNodeInstance.disconnect();
                 audioFilter.disconnect();
@@ -938,68 +947,57 @@
 
             let currentNode = sourceNodeInstance;
 
-            // Connect filters depending on preset
             if (audioSettings.preset === 'pctalk') {
-                // PC Communication: 8-bit, 11kHz. Bandpass from 200Hz to 4.5kHz.
                 audioFilter.type = 'bandpass';
                 audioFilter.frequency.value = 2200;
                 audioFilter.Q.value = 0.4;
                 currentNode.connect(audioFilter);
                 currentNode = audioFilter;
             } else if (audioSettings.preset === 'modem') {
-                // 56k Modem Mono BGM: Bandpass 400Hz to 3.2kHz. Muffled phone sound.
                 audioFilter.type = 'bandpass';
                 audioFilter.frequency.value = 1600;
                 audioFilter.Q.value = 0.85;
                 currentNode.connect(audioFilter);
                 currentNode = audioFilter;
             } else if (audioSettings.preset === 'soribada') {
-                // Soribada early MP3: High cutoff at 8.5kHz.
                 audioFilter2.type = 'lowpass';
                 audioFilter2.frequency.value = 8500;
                 currentNode.connect(audioFilter2);
                 currentNode = audioFilter2;
             }
 
-            // Route through bitcrusher processor node (for all presets except original)
             if (audioSettings.preset !== 'original') {
                 currentNode.connect(dspNode);
                 currentNode = dspNode;
             }
 
-            // Route to Analyser, Speaker output, and Recorder Stream Destination
             currentNode.connect(mainAnalyser);
             mainAnalyser.connect(destStreamNode);
             
-            // Route through monitor gain node to speaker output (howling protection)
             mainAnalyser.connect(monitorGainNode);
             monitorGainNode.connect(audioCtx.destination);
         }
 
-        // Play procedurally generated 90s digital track (No CORS, Always works!)
         function startDemoSynthesizer() {
             if (demoSynthInterval) clearInterval(demoSynthInterval);
             initAudioContext();
             audioCtx.resume();
 
-            // Synth output gain node
             synthGainNode = audioCtx.createGain();
             synthGainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
 
-            // Connect procedural synth generator node to audio graph
             rebuildAudioGraph(synthGainNode);
 
-            // Vintage synthesizer chords & rhythms
             const melodyTrack = [
                 329.63, 349.23, 392.00, 440.00, 440.00, 392.00, 349.23, 329.63,
                 293.66, 329.63, 349.23, 392.00, 329.63, 261.63, 293.66, 293.66
-            ]; // Cute retro midi melody
+            ];
             const bassTrack = [
                 110.00, 110.00, 130.81, 130.81, 146.83, 146.83, 110.00, 110.00,
                 98.00, 98.00, 110.00, 110.00, 87.31, 87.31, 98.00, 98.00
             ];
 
-            const stepDuration = 60 / demoTempo / 2; // Eighth notes
+            const stepDuration = 60 / demoTempo / 2;
             demoStep = 0;
 
             demoSynthInterval = setInterval(() => {
@@ -1007,13 +1005,11 @@
 
                 const now = audioCtx.currentTime;
 
-                // 1. Synthesizer Lead Oscillator
                 const leadOsc = audioCtx.createOscillator();
                 const leadGain = audioCtx.createGain();
                 leadOsc.type = 'triangle';
                 leadOsc.frequency.setValueAtTime(melodyTrack[demoStep % melodyTrack.length], now);
                 
-                // Add retro vibrato
                 const lfo = audioCtx.createOscillator();
                 const lfoGain = audioCtx.createGain();
                 lfo.frequency.value = 6;
@@ -1032,7 +1028,6 @@
                 leadOsc.stop(now + stepDuration * 1.6);
                 lfo.stop(now + stepDuration * 1.6);
 
-                // 2. Synthesizer Retro Bassline
                 if (demoStep % 2 === 0) {
                     const bassOsc = audioCtx.createOscillator();
                     const bassGain = audioCtx.createGain();
@@ -1049,9 +1044,7 @@
                     bassOsc.stop(now + stepDuration * 1.9);
                 }
 
-                // 3. Retro Simulated Drum Snare/Noise (every 4 steps)
                 if (demoStep % 4 === 2) {
-                    // Create dynamic white noise snare
                     const bufferSize = audioCtx.sampleRate * 0.15;
                     const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     const output = noiseBuffer.getChannelData(0);
@@ -1094,7 +1087,6 @@
                 
                 if (!isPlaying) return;
 
-                // Frame rate control (For visual player & Recorder stream alike)
                 if (videoSettings.fps !== 'original') {
                     const elapsed = nowTime - lastFrameTime;
                     const fpsInterval = 1000 / videoSettings.fps;
@@ -1102,43 +1094,34 @@
                     lastFrameTime = nowTime - (elapsed % fpsInterval);
                 }
 
-                // Resize hidden worker canvas to match our target retro resolution
                 hiddenCanvas.width = videoSettings.resWidth;
                 hiddenCanvas.height = videoSettings.resHeight;
 
                 if (mediaMode === 'file' || mediaMode === 'camera') {
-                    // 1. Draw uploaded video or webcam stream frame onto low-resolution canvas
                     hidCtx.drawImage(hiddenVideo, 0, 0, videoSettings.resWidth, videoSettings.resHeight);
                 } else if (mediaMode === 'audio') {
-                    // 2. Render gorgeously detailed Compact Cassette Tape spinning!
                     drawCassetteTape(hidCtx, videoSettings.resWidth, videoSettings.resHeight);
                 } else if (mediaMode === 'demo') {
-                    // 3. Generate procedural 90s synthwave scene (CORS safe, highly responsive!)
                     drawDemoRetroScene(hidCtx, videoSettings.resWidth, videoSettings.resHeight);
                 } else {
-                    // Draw classic TV static if nothing selected
                     drawTVStaticScene(hidCtx, videoSettings.resWidth, videoSettings.resHeight);
                 }
 
-                // Get downscaled pixels to apply retro color palette reduction & Bayer Dithering
-                // Skip color reduction for cassette tape mode to retain crisp vintage design vector looks
                 if (mediaMode !== 'audio' && videoSettings.colorDepth !== 'full') {
                     const imgData = hidCtx.getImageData(0, 0, videoSettings.resWidth, videoSettings.resHeight);
                     applyRetroColorAndDither(imgData.data, videoSettings.resWidth, videoSettings.resHeight);
                     hidCtx.putImageData(imgData, 0, 0);
                 }
 
-                // Draw upscaled pixels onto visible screen with crisp pixelated filters
                 outputCanvas.width = outputCanvas.clientWidth;
                 outputCanvas.height = outputCanvas.clientHeight;
                 
-                outCtx.imageSmoothingEnabled = false; // MUST be disabled for sharp pixels!
+                outCtx.imageSmoothingEnabled = false;
                 outCtx.mozImageSmoothingEnabled = false;
                 outCtx.webkitImageSmoothingEnabled = false;
 
                 outCtx.drawImage(hiddenCanvas, 0, 0, outputCanvas.width, outputCanvas.height);
 
-                // Apply vintage overlays (Scanlines and vignette CRT curve)
                 if (videoSettings.scanlines) {
                     drawScanlinesOverlay(outCtx, outputCanvas.width, outputCanvas.height);
                 }
@@ -1147,9 +1130,7 @@
             renderLoopId = requestAnimationFrame(render);
         }
 
-        // Procedural Compact Cassette Tape Vector Drawer
         function drawCassetteTape(ctx, w, h) {
-            // Draw old plastic background
             ctx.fillStyle = '#1c1c1f';
             ctx.fillRect(0, 0, w, h);
 
@@ -1158,7 +1139,6 @@
             const tW = w * 0.82;
             const tH = h * 0.65;
 
-            // 1. Outer plastic casing
             ctx.fillStyle = '#29292d';
             drawRoundedRect(ctx, cX - tW/2, cY - tH/2, tW, tH, 6);
             ctx.fill();
@@ -1166,20 +1146,17 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // 2. Paper Label (very retro 90s)
             const lW = tW * 0.88;
             const lH = tH * 0.62;
-            ctx.fillStyle = '#f2f0e8'; // Beige paper
+            ctx.fillStyle = '#f2f0e8';
             drawRoundedRect(ctx, cX - lW/2, cY - lH/2 - 4, lW, lH, 4);
             ctx.fill();
 
-            // Retro lines
-            ctx.fillStyle = '#ff3b30'; // Red ribbon line
+            ctx.fillStyle = '#ff3b30';
             ctx.fillRect(cX - lW/2, cY - 10, lW, 3);
-            ctx.fillStyle = '#007af5'; // Blue ribbon line
+            ctx.fillStyle = '#007af5';
             ctx.fillRect(cX - lW/2, cY - 4, lW, 3);
 
-            // Handwritten ink track name
             ctx.fillStyle = '#111166';
             ctx.font = 'bold 8px "Mona", sans-serif';
             ctx.textBaseline = 'middle';
@@ -1187,7 +1164,6 @@
             const displayTitle = document.getElementById('current-filename').innerText;
             ctx.fillText(displayTitle.substring(0, 30) || "레트로 공테이프 A-Side", cX, cY - 18);
 
-            // 3. Clear window center block
             const wW = tW * 0.46;
             const wH = tH * 0.35;
             ctx.fillStyle = '#151517';
@@ -1196,7 +1172,6 @@
             ctx.strokeStyle = '#0a0a0b';
             ctx.stroke();
 
-            // Setup rotating mechanics
             const distance = wW * 0.28;
             const leftGearX = cX - distance;
             const rightGearX = cX + distance;
@@ -1208,20 +1183,17 @@
             let currentTime = hiddenVideo.currentTime || 0;
             let ratio = duration > 0 ? (currentTime / duration) : 0;
 
-            // Left brown tape reel (shrinks)
             let leftRad = reelMin + (reelMax - reelMin) * (1 - ratio);
-            ctx.fillStyle = '#5c3a21'; // Tape brown
+            ctx.fillStyle = '#5c3a21';
             ctx.beginPath();
             ctx.arc(leftGearX, gearY, leftRad, 0, Math.PI * 2);
             ctx.fill();
 
-            // Right brown tape reel (grows)
             let rightRad = reelMin + (reelMax - reelMin) * ratio;
             ctx.beginPath();
             ctx.arc(rightGearX, gearY, rightRad, 0, Math.PI * 2);
             ctx.fill();
 
-            // Gear Hubs (White outer sprockets)
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(leftGearX, gearY, wH * 0.3, 0, Math.PI * 2);
@@ -1232,24 +1204,20 @@
                 tapeGearRotation += 0.055;
             }
 
-            // Sprocket gear teeth drawing
             drawSprocketTeeth(ctx, leftGearX, gearY, wH * 0.3, tapeGearRotation);
             drawSprocketTeeth(ctx, rightGearX, gearY, wH * 0.3, tapeGearRotation);
 
-            // Spindle center hole (black)
             ctx.fillStyle = '#000000';
             ctx.beginPath();
             ctx.arc(leftGearX, gearY, wH * 0.12, 0, Math.PI * 2);
             ctx.arc(rightGearX, gearY, wH * 0.12, 0, Math.PI * 2);
             ctx.fill();
 
-            // Time stamp digital display on label
             ctx.fillStyle = '#00ff00';
             ctx.font = '7px "Share Tech Mono", monospace';
             ctx.fillText(formatTime(currentTime) + " / " + formatTime(duration), cX, cY + 32);
         }
 
-        // Rounded Rectangle Helper for Cassette UI
         function drawRoundedRect(ctx, x, y, width, height, radius) {
             ctx.beginPath();
             ctx.moveTo(x + radius, y);
@@ -1264,7 +1232,6 @@
             ctx.closePath();
         }
 
-        // Sprocket Teeth teeth animation helper
         function drawSprocketTeeth(ctx, cx, cy, r, rotation) {
             ctx.fillStyle = '#dcdce2';
             const teeth = 6;
@@ -1276,7 +1243,6 @@
             }
         }
 
-        // Time formatter helper
         function formatTime(secs) {
             if (isNaN(secs) || !isFinite(secs)) return "00:00";
             let m = Math.floor(secs / 60);
@@ -1284,34 +1250,28 @@
             return (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
         }
 
-        // Procedural Retro Cyberpunk Scene Drawer (Demo Mode)
         function drawDemoRetroScene(ctx, w, h) {
-            // Draw gradient twilight background
             const grad = ctx.createLinearGradient(0, 0, 0, h);
-            grad.addColorStop(0, '#100028'); // Deep Purple
+            grad.addColorStop(0, '#100028');
             grad.addColorStop(0.5, '#350050');
-            grad.addColorStop(1, '#6b007b');  // Neon Magenta
+            grad.addColorStop(1, '#6b007b');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, w, h);
 
-            // Animate angle
             demoAngle += 0.035;
 
-            // Draw glowing retro sun
             const sunY = h * 0.52;
             const sunRadius = h * 0.22;
-            ctx.fillStyle = '#ff3366'; // Glowing red-orange sun
+            ctx.fillStyle = '#ff3366';
             ctx.beginPath();
             ctx.arc(w/2, sunY, sunRadius, Math.PI, 0, false);
             ctx.fill();
 
-            // Draw yellow horizon lines into retro sun (classic synthwave aesthetics)
             ctx.fillStyle = '#ffcc00';
             ctx.beginPath();
             ctx.arc(w/2, sunY, sunRadius, 0, Math.PI, false);
             ctx.fill();
 
-            // Slicing lines through the sun
             ctx.fillStyle = '#100028';
             for (let i = 1; i < 9; i++) {
                 const lineY = sunY - sunRadius + (sunRadius * 2) * (i / 9);
@@ -1320,8 +1280,7 @@
                 }
             }
 
-            // Draw perspective neon grid lines scrolling
-            ctx.strokeStyle = '#00ffff'; // Cyan Grid
+            ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 1;
             const horizon = h * 0.55;
             const gridCount = 14;
@@ -1335,9 +1294,8 @@
                 ctx.stroke();
             }
 
-            // Horizontal scrolling grid bars
             for (let i = 0; i < 6; i++) {
-                const ratio = Math.pow(i / 5, 2.5); // Perspective scaling
+                const ratio = Math.pow(i / 5, 2.5);
                 const lineY = horizon + (h - horizon) * ratio + speedOffset * (1 - ratio);
                 if (lineY <= h) {
                     ctx.beginPath();
@@ -1347,7 +1305,6 @@
                 }
             }
 
-            // Bouncing 3D-like Wireframe Retro Cube in center!
             const cubeSize = h * 0.22;
             const cubeX = w / 2;
             const cubeY = h * 0.35 + Math.sin(demoAngle) * (h * 0.08);
@@ -1355,15 +1312,12 @@
             ctx.strokeStyle = '#ffcc00';
             ctx.lineWidth = 1.2;
             
-            // Simple 3D projection rotation
             const cosA = Math.cos(demoAngle * 0.5);
             const sinA = Math.sin(demoAngle * 0.5);
 
             const project = (x, y, z) => {
-                // Rotate around Y axis
                 const rx = x * cosA - z * sinA;
                 const rz = x * sinA + z * cosA;
-                // Simple perspective scale
                 const dist = 120;
                 const scale = dist / (dist + rz);
                 return {
@@ -1372,7 +1326,6 @@
                 };
             };
 
-            // Define 8 cube vertices
             const half = cubeSize / 2;
             const v = [
                 project(-half, -half, -half),
@@ -1385,7 +1338,6 @@
                 project(-half, half, half)
             ];
 
-            // Draw cube wireframe lines
             const drawLine = (i, j) => {
                 ctx.beginPath();
                 ctx.moveTo(v[i].x, v[i].y);
@@ -1393,11 +1345,10 @@
                 ctx.stroke();
             };
 
-            drawLine(0, 1); drawLine(1, 2); drawLine(2, 3); drawLine(3, 0); // Back
-            drawLine(4, 5); drawLine(5, 6); drawLine(6, 7); drawLine(7, 4); // Front
-            drawLine(0, 4); drawLine(1, 5); drawLine(2, 6); drawLine(3, 7); // Bridges
+            drawLine(0, 1); drawLine(1, 2); drawLine(2, 3); drawLine(3, 0);
+            drawLine(4, 5); drawLine(5, 6); drawLine(6, 7); drawLine(7, 4);
+            drawLine(0, 4); drawLine(1, 5); drawLine(2, 6); drawLine(3, 7);
 
-            // Text Banner display (changes according to preset!)
             ctx.fillStyle = '#ffffff';
             ctx.font = '8px "Share Tech Mono", monospace';
             ctx.textBaseline = 'middle';
@@ -1410,7 +1361,6 @@
             ctx.fillText(overlayStr, w / 2, h * 0.9);
         }
 
-        // Simulated CRT Static pattern when waiting
         function drawTVStaticScene(ctx, w, h) {
             const imgData = ctx.createImageData(w, h);
             const pixels = imgData.data;
@@ -1429,7 +1379,6 @@
             ctx.fillText("VIDEO OFFLINE - PRESS PLAY", w / 2, h / 2);
         }
 
-        // Custom 16-bit, 8-bit & 4-bit Color quantization with Bayer Ordered Dithering
         function applyRetroColorAndDither(pixels, w, h) {
             const mode = videoSettings.colorDepth;
             const useDither = videoSettings.dither;
@@ -1441,19 +1390,15 @@
                     let g = pixels[idx+1];
                     let b = pixels[idx+2];
 
-                    // Fetch threshold value from Bayer ordered matrix (ranges from -128 to 128)
                     const threshold = bayerMatrix[y % 4][x % 4];
 
                     if (mode === 'retro4') {
-                        // 16 Colors (4-bit Standard Windows / IRGB Palette)
-                        // Add dither noise before color matching for high fidelity vintage dithering
                         if (useDither) {
                             r += (threshold - 128) * 0.40;
                             g += (threshold - 128) * 0.40;
                             b += (threshold - 128) * 0.40;
                         }
 
-                        // Nearest neighbor search in standard 16-color IRGB space
                         let minDistance = Infinity;
                         let matchedColor = retro16Palette[0];
 
@@ -1462,7 +1407,6 @@
                             const pg = retro16Palette[c][1];
                             const pb = retro16Palette[c][2];
                             
-                            // Euclidean distance squared
                             const dist = (r - pr) * (r - pr) + (g - pg) * (g - pg) + (b - pb) * (b - pb);
                             if (dist < minDistance) {
                                 minDistance = dist;
@@ -1474,19 +1418,16 @@
                         b = matchedColor[2];
 
                     } else if (mode === 'retro8') {
-                        // 256 Colors (8-bit Web Palette standard: R3, G3, B2 levels)
                         if (useDither) {
                             r += (threshold - 128) * 0.22;
                             g += (threshold - 128) * 0.22;
                             b += (threshold - 128) * 0.32;
                         }
-                        // Quantize into distinct 256 palette steps
                         r = Math.round(r / 255 * 7) * (255 / 7);
                         g = Math.round(g / 255 * 7) * (255 / 7);
                         b = Math.round(b / 255 * 3) * (255 / 3);
 
                     } else if (mode === 'high') {
-                        // 16-bit High Color (R5, G6, B5 structure)
                         if (useDither) {
                             r += (threshold - 128) * 0.08;
                             g += (threshold - 128) * 0.08;
@@ -1497,7 +1438,6 @@
                         b = Math.round(b / 255 * 31) * (255 / 31);
                     }
 
-                    // Clamp values to valid byte range
                     pixels[idx] = Math.max(0, Math.min(255, r));
                     pixels[idx+1] = Math.max(0, Math.min(255, g));
                     pixels[idx+2] = Math.max(0, Math.min(255, b));
@@ -1505,14 +1445,12 @@
             }
         }
 
-        // Draw horizontal CRT scanline shadows overlay on output screen
         function drawScanlinesOverlay(ctx, w, h) {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
             for (let y = 0; y < h; y += 4) {
                 ctx.fillRect(0, y, w, 2);
             }
             
-            // Retro screen corner shadow (vignette effect)
             const radGrad = ctx.createRadialGradient(w/2, h/2, h * 0.45, w/2, h/2, w * 0.7);
             radGrad.addColorStop(0, 'rgba(0,0,0,0)');
             radGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
@@ -1523,31 +1461,29 @@
         // ==========================================
         //  MEDIA ACTIONS & FILE EVENT HANDLERS
         // ==========================================
-        function triggerFilePicker() {
+        window.triggerFilePicker = function() {
             document.getElementById('video-file-picker').click();
-        }
+        };
 
-        function handleVideoFile(e) {
+        window.handleVideoFile = function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const isAudio = file.type.startsWith('audio/');
 
             initAudioContext();
-            audioCtx.resume();
+            if (audioCtx) audioCtx.resume();
 
-            // Clear camera and demo loops
             stopCamera();
             if (demoSynthInterval) {
                 clearInterval(demoSynthInterval);
                 demoSynthInterval = null;
             }
 
-            // Create object URL and attach to hidden video element (video tags process audio flawlessly)
             const fileUrl = URL.createObjectURL(file);
-            hiddenVideo.srcObject = null; // Clean webcam pointers
+            hiddenVideo.srcObject = null;
             hiddenVideo.src = fileUrl;
-            hiddenVideo.muted = false; // Programmatically unmute to pipeline the sound track
+            hiddenVideo.muted = false;
             hiddenVideo.load();
 
             document.getElementById('current-filename').innerText = file.name;
@@ -1563,32 +1499,24 @@
             updateExportFormatsUI();
             isPlaying = false;
 
-            // Wait for video/audio meta to initialize audio source node
             hiddenVideo.onloadedmetadata = function() {
                 initAudioContext();
                 if (audioCtx) audioCtx.resume();
 
-                // BUG FIX: HTMLMediaElement can only be associated with MediaElementSourceNode ONCE.
                 if (!videoSourceNode) {
                     videoSourceNode = audioCtx.createMediaElementSource(hiddenVideo);
                 }
                 
                 rebuildAudioGraph(videoSourceNode);
-                
-                // MOBILE GESTURE BYPASS:
-                // To avoid browser autoplay restriction blocks on mobile & KakaoTalk WebView,
-                // instead of playing automatically, we transition to a ready state, prompting a manual touch.
                 isPlaying = false;
                 document.getElementById('player-status').innerText = "상태: 준비 완료 (▶ 재생 버튼을 누르십시오)";
             };
-        }
+        };
 
-        // Camera Activation and Capture Stream Handler
-        async function startCamera() {
+        window.startCamera = async function() {
             initAudioContext();
-            audioCtx.resume();
+            if (audioCtx) audioCtx.resume();
 
-            // Stop existing webcam or synthesizer loops
             stopCamera();
             if (demoSynthInterval) {
                 clearInterval(demoSynthInterval);
@@ -1596,16 +1524,14 @@
             }
 
             try {
-                // Request live webcam streaming & mic capture
                 cameraStream = await navigator.mediaDevices.getUserMedia({
                     video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
                     audio: true
                 });
 
-                // Feed real camera stream to hidden processing element
                 hiddenVideo.src = "";
                 hiddenVideo.srcObject = cameraStream;
-                hiddenVideo.muted = true; // Mute element loop playback to avoid howl echo loops
+                hiddenVideo.muted = true;
                 hiddenVideo.play();
 
                 document.getElementById('current-filename').innerText = "LIVE_WEBCAM_CAPTURE";
@@ -1615,33 +1541,30 @@
                 updateExportFormatsUI();
                 isPlaying = true;
 
-                // Bind mic capture to retro audio engine graph
                 cameraSourceNode = audioCtx.createMediaStreamSource(cameraStream);
                 rebuildAudioGraph(cameraSourceNode);
 
-                // HOWLING FEEDBACK PROTECTION: Mute monitors during live mic recording
                 if (monitorGainNode) {
                     monitorGainNode.gain.setValueAtTime(0, audioCtx.currentTime);
                 }
 
                 showSystemAlert(
-                    "실시간 웹캠 카메라 촬영이 무사히 활성화되었습니다!\n\n※ 하울링(고주파 소음 피드백) 현상을 막기 위하여 실시간 스피커 모니터링음은 잠시 무음 소거처리됩니다. 단, Winamp 이퀼라이저 및 최종 파일 저장 기능 속 마이크 소리는 정상적으로 레트로하게 찌그러져 포함됩니다.",
+                    "실시간 웹캠 카메라 촬영이 무사히 활성화되었습니다!\n\n※ 하울링 현상을 막기 위하여 실시간 스피커 모니터링음은 무음 처리됩니다. 최종 저장 파일속 소리는 레트로하게 포함됩니다.",
                     "카메라 활성화 완료"
                 );
 
             } catch (err) {
                 console.error(err);
                 showSystemAlert(
-                    "장치 카메라 혹은 마이크 권한을 얻지 못했읍니다.\n브라우저 주소창 왼쪽의 자물쇠 기호를 눌러 권한을 허용해 주십시오.",
+                    "장치 카메라 혹은 마이크 권한을 얻지 못했읍니다.\n브라우저 주소창 자물쇠 기호를 눌러 권한을 허용해 주십시오.",
                     "장치 연동 실패"
                 );
                 mediaMode = 'none';
                 isPlaying = false;
             }
-        }
+        };
 
-        // Stops all camera tracks to disable browser camera active status
-        function stopCamera() {
+        window.stopCamera = function() {
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
                 cameraStream = null;
@@ -1653,46 +1576,42 @@
                 document.getElementById('player-status').innerText = "상태: 대기중...";
                 document.getElementById('current-filename').innerText = "파일을 선택해주세요";
                 
-                // Restore monitoring gain levels back
                 if (monitorGainNode) {
                     monitorGainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
                 }
             }
-        }
+        };
 
-        // Dynamic Export Selection UI based on media modes
-        function updateExportFormatsUI() {
+        window.updateExportFormatsUI = function() {
             const select = document.getElementById('select-export-format');
             const videoControlBlock = document.getElementById('video-control-block');
+            if (!select || !videoControlBlock) return;
             select.innerHTML = '';
             
             if (mediaMode === 'audio') {
-                // Audio mode choices
                 select.innerHTML = `
                     <option value="wav" selected>WAV (.wav)</option>
                     <option value="mp3">MP3 (.mp3)</option>
                     <option value="webm">WebM (.webm)</option>
                 `;
-                // Hide video controls to avoid cluttering in audio mode
                 videoControlBlock.classList.add('opacity-40', 'pointer-events-none');
             } else {
-                // Video mode choices
                 select.innerHTML = `
                     <option value="mp4" selected>MP4 (.mp4)</option>
                     <option value="webm">WebM (.webm)</option>
                 `;
                 videoControlBlock.classList.remove('opacity-40', 'pointer-events-none');
             }
-        }
+        };
 
-        // Preset Apply mapping configuration
-        function applyPreset(presetName) {
+        window.applyPreset = function(presetName) {
             initAudioContext();
-            audioCtx.resume();
+            if (audioCtx) audioCtx.resume();
 
             audioSettings.preset = presetName;
 
             const selRes = document.getElementById('select-resolution');
+            const selAspect = document.getElementById('select-aspect');
             const selFps = document.getElementById('select-fps');
             const selCol = document.getElementById('select-color');
             const chkScan = document.getElementById('check-scanlines');
@@ -1700,73 +1619,62 @@
             const selAud = document.getElementById('select-audio-preset');
 
             if (presetName === 'p95_hitel') {
-                // 1995 Nownuri Hitel Preset
                 videoSettings.resWidth = 160;
                 videoSettings.resHeight = 120;
                 videoSettings.fps = 10;
                 videoSettings.colorDepth = 'retro8';
                 videoSettings.scanlines = true;
                 videoSettings.dither = true;
+                videoSettings.aspectRatio = '4:3';
 
-                audioSettings.sampleRate = 11025;
-                audioSettings.bitDepth = 8;
-                audioSettings.mp3Artifacts = false;
-                audioSettings.mono = true;
-
-                selRes.value = "120";
-                selFps.value = "10";
-                selCol.value = "retro8";
-                chkScan.checked = true;
-                chkDith.checked = true;
-                selAud.value = "pctalk";
+                if (selRes) selRes.value = "120";
+                if (selAspect) selAspect.value = "4:3";
+                if (selFps) selFps.value = "10";
+                if (selCol) selCol.value = "retro8";
+                if (chkScan) chkScan.checked = true;
+                if (chkDith) chkDith.checked = true;
+                if (selAud) selAud.value = "pctalk";
 
             } else if (presetName === 'p98_modem') {
-                // 1998 56K Dialup web BGM Preset
-                videoSettings.resWidth = 176;
+                videoSettings.resWidth = 192;
                 videoSettings.resHeight = 144;
                 videoSettings.fps = 12;
                 videoSettings.colorDepth = 'retro8';
                 videoSettings.scanlines = true;
                 videoSettings.dither = true;
+                videoSettings.aspectRatio = '4:3';
 
-                audioSettings.sampleRate = 22050;
-                audioSettings.bitDepth = 12;
-                audioSettings.mp3Artifacts = false;
-                audioSettings.mono = true;
-
-                selRes.value = "144";
-                selFps.value = "12";
-                selCol.value = "retro8";
-                chkScan.checked = true;
-                chkDith.checked = true;
-                selAud.value = "modem";
+                if (selRes) selRes.value = "144";
+                if (selAspect) selAspect.value = "4:3";
+                if (selFps) selFps.value = "12";
+                if (selCol) selCol.value = "retro8";
+                if (chkScan) chkScan.checked = true;
+                if (chkDith) chkDith.checked = true;
+                if (selAud) selAud.value = "modem";
 
             } else if (presetName === 'p02_soribada') {
-                // 2002 Flash Animation & Soribada MP3 Preset
                 videoSettings.resWidth = 240;
                 videoSettings.resHeight = 180;
                 videoSettings.fps = 15;
                 videoSettings.colorDepth = 'high';
                 videoSettings.scanlines = false;
                 videoSettings.dither = false;
+                videoSettings.aspectRatio = '4:3';
 
-                audioSettings.sampleRate = 22050;
-                audioSettings.bitDepth = 10;
-                audioSettings.mp3Artifacts = true;
-                audioSettings.mono = false;
-
-                selRes.value = "240";
-                selFps.value = "15";
-                selCol.value = "high";
-                chkScan.checked = false;
-                chkDith.checked = false;
-                selAud.value = "soribada";
+                if (selRes) selRes.value = "240";
+                if (selAspect) selAspect.value = "4:3";
+                if (selFps) selFps.value = "15";
+                if (selCol) selCol.value = "high";
+                if (chkScan) chkScan.checked = false;
+                if (chkDith) chkDith.checked = false;
+                if (selAud) selAud.value = "soribada";
             }
 
-            // Sync DSP Indicators
+            const crtContainer = document.getElementById('crt-container');
+            if (crtContainer) crtContainer.style.aspectRatio = '4/3';
+
             updateDSPPanel();
             
-            // Reconnect audio node routing
             if (mediaMode === 'file' && videoSourceNode) {
                 rebuildAudioGraph(videoSourceNode);
             } else if (mediaMode === 'audio' && videoSourceNode) {
@@ -1776,36 +1684,71 @@
             } else if (mediaMode === 'demo' && synthGainNode) {
                 rebuildAudioGraph(synthGainNode);
             }
-        }
+        };
 
-        // Manual controls update
-        function updateVideoSettings() {
-            const res = document.getElementById('select-resolution').value;
-            const fps = document.getElementById('select-fps').value;
-            const col = document.getElementById('select-color').value;
-            const scan = document.getElementById('check-scanlines').checked;
-            const dith = document.getElementById('check-dither').checked;
+        window.updateVideoSettings = function() {
+            const resEl = document.getElementById('select-resolution');
+            const aspectEl = document.getElementById('select-aspect');
+            const fpsEl = document.getElementById('select-fps');
+            const colEl = document.getElementById('select-color');
+            const scanEl = document.getElementById('check-scanlines');
+            const dithEl = document.getElementById('check-dither');
 
-            // Compute video dimensions
+            const res = resEl ? resEl.value : '144';
+            const aspect = aspectEl ? aspectEl.value : '4:3';
+            const fps = fpsEl ? fpsEl.value : '15';
+            const col = colEl ? colEl.value : 'retro8';
+            const scan = scanEl ? scanEl.checked : true;
+            const dith = dithEl ? dithEl.checked : true;
+
+            videoSettings.aspectRatio = aspect;
+
+            let heightVal = 144;
             if (res === 'original') {
-                videoSettings.resWidth = mediaMode === 'file' ? hiddenVideo.videoWidth : 320;
-                videoSettings.resHeight = mediaMode === 'file' ? hiddenVideo.videoHeight : 240;
+                heightVal = (mediaMode === 'file' && hiddenVideo.videoHeight) ? hiddenVideo.videoHeight : 240;
             } else {
-                const heightVal = parseInt(res);
-                videoSettings.resWidth = Math.round(heightVal * 1.33); // 4:3 default
-                videoSettings.resHeight = heightVal;
+                heightVal = parseInt(res, 10);
             }
 
-            videoSettings.fps = fps === 'original' ? 'original' : parseInt(fps);
+            videoSettings.resHeight = heightVal;
+
+            if (aspect === '4:3') {
+                videoSettings.resWidth = Math.round(heightVal * (4 / 3));
+            } else if (aspect === '16:9') {
+                videoSettings.resWidth = Math.round(heightVal * (16 / 9));
+            } else if (aspect === 'original') {
+                if (mediaMode === 'file' && hiddenVideo.videoWidth && hiddenVideo.videoHeight) {
+                    videoSettings.resWidth = Math.round(heightVal * (hiddenVideo.videoWidth / hiddenVideo.videoHeight));
+                } else {
+                    videoSettings.resWidth = Math.round(heightVal * (4 / 3));
+                }
+            }
+
+            videoSettings.fps = fps === 'original' ? 'original' : parseInt(fps, 10);
             videoSettings.colorDepth = col;
             videoSettings.scanlines = scan;
             videoSettings.dither = dith;
-        }
 
-        // Audio preset mapping configuration
-        function updateAudioPreset() {
+            const crtContainer = document.getElementById('crt-container');
+            if (crtContainer) {
+                if (aspect === '4:3') {
+                    crtContainer.style.aspectRatio = '4/3';
+                } else if (aspect === '16:9') {
+                    crtContainer.style.aspectRatio = '16/9';
+                } else {
+                    if (mediaMode === 'file' && hiddenVideo.videoWidth && hiddenVideo.videoHeight) {
+                        crtContainer.style.aspectRatio = `${hiddenVideo.videoWidth}/${hiddenVideo.videoHeight}`;
+                    } else {
+                        crtContainer.style.aspectRatio = '4/3';
+                    }
+                }
+            }
+        };
+
+        window.updateAudioPreset = function() {
             initAudioContext();
-            audioSettings.preset = document.getElementById('select-audio-preset').value;
+            const audEl = document.getElementById('select-audio-preset');
+            audioSettings.preset = audEl ? audEl.value : 'soribada';
 
             if (audioSettings.preset === 'original') {
                 audioSettings.sampleRate = 44100;
@@ -1840,29 +1783,36 @@
             } else if (mediaMode === 'demo' && synthGainNode) {
                 rebuildAudioGraph(synthGainNode);
             }
-        }
+        };
 
         function updateDSPPanel() {
-            document.getElementById('dsp-sample').innerText = `${audioSettings.sampleRate} Hz`;
-            document.getElementById('dsp-bit').innerText = `${audioSettings.bitDepth}-bit`;
-            document.getElementById('dsp-ringing').innerText = audioSettings.mp3Artifacts ? "ON (금속성 버즈)" : "OFF";
+            const dspSamp = document.getElementById('dsp-sample');
+            const dspBit = document.getElementById('dsp-bit');
+            const dspRing = document.getElementById('dsp-ringing');
+            const dspFilt = document.getElementById('dsp-filter');
+
+            if (dspSamp) dspSamp.innerText = `${audioSettings.sampleRate} Hz`;
+            if (dspBit) dspBit.innerText = `${audioSettings.bitDepth}-bit`;
+            if (dspRing) dspRing.innerText = audioSettings.mp3Artifacts ? "ON (금속성 버즈)" : "OFF";
             
             let filterDesc = "Bypass";
             if (audioSettings.preset === 'pctalk') filterDesc = "Bandpass (2200Hz)";
             if (audioSettings.preset === 'modem') filterDesc = "Telephone Bandpass (1600Hz)";
             if (audioSettings.preset === 'soribada') filterDesc = "Lowpass High-cut (8500Hz)";
-            document.getElementById('dsp-filter').innerText = filterDesc;
+            if (dspFilt) dspFilt.innerText = filterDesc;
 
-            // Audio Player stats
-            document.getElementById('val-samplerate').innerText = `${audioSettings.sampleRate} Hz`;
-            document.getElementById('val-bitrate').innerText = audioSettings.preset === 'pctalk' ? '8-bit PCM (11k)' : audioSettings.preset === 'modem' ? '56kbps Mono' : audioSettings.preset === 'soribada' ? '32~48kbps MP3' : 'Original';
-            document.getElementById('val-channels').innerText = audioSettings.mono ? 'Mono' : 'Stereo';
+            const valSamp = document.getElementById('val-samplerate');
+            const valBit = document.getElementById('val-bitrate');
+            const valChan = document.getElementById('val-channels');
+
+            if (valSamp) valSamp.innerText = `${audioSettings.sampleRate} Hz`;
+            if (valBit) valBit.innerText = audioSettings.preset === 'pctalk' ? '8-bit PCM (11k)' : audioSettings.preset === 'modem' ? '56kbps Mono' : audioSettings.preset === 'soribada' ? '32~48kbps MP3' : 'Original';
+            if (valChan) valChan.innerText = audioSettings.mono ? 'Mono' : 'Stereo';
         }
 
-        // Play/Pause Action Triggers
-        function playMedia() {
+        window.playMedia = function() {
             if (mediaMode === 'none') {
-                loadSampleFeed(); // Fallback to demo instantly
+                loadSampleFeed();
                 return;
             }
 
@@ -1871,14 +1821,12 @@
             isPlaying = true;
 
             if (mediaMode === 'file' || mediaMode === 'audio') {
-                hiddenVideo.muted = false; // Double-check unmuted state so that sound outputs to Web Audio Graph
+                hiddenVideo.muted = false;
                 
-                // GESTURE BYPASS PROMISE: Attempt to play and catch gesture permission blocks gracefully
                 const playPromise = hiddenVideo.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(err => {
                         console.warn("Autoplay blocked by mobile browser gesture policy:", err);
-                        // Fallback to muted playback so that canvas frame loop doesn't freeze
                         hiddenVideo.muted = true;
                         hiddenVideo.play().catch(e => {
                             isPlaying = false;
@@ -1896,48 +1844,42 @@
                     startDemoSynthesizer();
                 }
             }
-        }
+        };
 
-        // Pause standard audio timeline
-        function pauseMedia() {
+        window.pauseMedia = function() {
             isPlaying = false;
             if (mediaMode === 'file' || mediaMode === 'audio') {
                 hiddenVideo.pause();
                 document.getElementById('player-status').innerText = "상태: 일시 정지";
             } else if (mediaMode === 'camera') {
-                // To keep camera status off when stopped, stop capture tracks completely
                 stopCamera();
             } else if (mediaMode === 'demo') {
                 document.getElementById('player-status').innerText = "상태: 대기 중 (데모 정지)";
             }
-        }
+        };
 
-        function loadSampleFeed() {
+        window.loadSampleFeed = function() {
             initAudioContext();
-            audioCtx.resume();
+            if (audioCtx) audioCtx.resume();
 
-            // Clear camera tracks
             stopCamera();
 
-            // Setup Demo settings
             mediaMode = 'demo';
             isPlaying = true;
             document.getElementById('current-filename').innerText = "RetroSynth_Wave_1998.mid";
             document.getElementById('player-status').innerText = "상태: 데모 씬 구동 중";
 
-            applyPreset('p98_modem'); // default preset for beautiful retro demo
-            
-            // Start synthesis loops
+            applyPreset('p98_modem');
             startDemoSynthesizer();
-        }
+        };
 
         // Winamp Spectrum LED Visualizer loop
         const visCanvas = document.getElementById('visualizer-canvas');
-        const visCtx = visCanvas.getContext('2d');
+        const visCtx = visCanvas ? visCanvas.getContext('2d') : null;
         
         function drawVisualizer() {
             requestAnimationFrame(drawVisualizer);
-            if (!mainAnalyser) return;
+            if (typeof mainAnalyser === 'undefined' || !mainAnalyser || !visCtx) return;
 
             const bufferLength = mainAnalyser.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
@@ -1949,7 +1891,6 @@
             visCtx.fillStyle = '#000000';
             visCtx.fillRect(0, 0, visCanvas.width, visCanvas.height);
 
-            // Draw classic vertical spectrum bars
             const barWidth = Math.floor(visCanvas.width / bufferLength) * 2.2;
             let x = 0;
 
@@ -1957,12 +1898,11 @@
                 const percent = dataArray[i] / 255;
                 const barHeight = Math.floor(visCanvas.height * percent * 0.9);
 
-                // LED color segment: top green, bottom green, depending on amplitude
                 if (barHeight > 0) {
                     const grad = visCtx.createLinearGradient(0, visCanvas.height, 0, visCanvas.height - barHeight);
-                    grad.addColorStop(0, '#00ff00'); // Green bottom
-                    grad.addColorStop(0.7, '#ffff00'); // Yellow mid
-                    grad.addColorStop(1, '#ff0000'); // Red top peak
+                    grad.addColorStop(0, '#00ff00');
+                    grad.addColorStop(0.7, '#ffff00');
+                    grad.addColorStop(1, '#ff0000');
                     
                     visCtx.fillStyle = grad;
                     visCtx.fillRect(x, visCanvas.height - barHeight, barWidth - 1, barHeight);
@@ -1978,22 +1918,21 @@
         let mediaRecorder = null;
         let recordedChunks = [];
         let isEncoding = false;
-        let isCancelled = false; // Flag to check if encoding was explicitly cancelled
-        let recordingDuration = 10; // Record length in seconds (defaults to file size or 10s demo)
+        let isCancelled = false;
+        let recordingDuration = 10;
 
-        function startEncoding() {
+        window.startEncoding = function() {
             if (mediaMode === 'none') {
                 showSystemAlert('인코딩할 미디어가 로드되지 않았습니다.\n파일 열기 혹은 데모 버튼을 먼저 눌러주십시오.', '오류');
                 return;
             }
 
             initAudioContext();
-            audioCtx.resume();
+            if (audioCtx) audioCtx.resume();
 
-            // Determine Target format based on user choice & browser compatibility
             const targetFormat = document.getElementById('select-export-format').value;
             let finalMimeType = mediaMode === 'audio' ? 'audio/webm' : 'video/webm;codecs=vp8,opus';
-            let fileExt = targetFormat; // 'wav', 'mp3', 'webm', 'mp4'
+            let fileExt = targetFormat;
             let fallbackUsed = false;
 
             if (targetFormat === 'mp4') {
@@ -2012,27 +1951,23 @@
                     fileExt = 'webm';
                 }
             } else if (targetFormat === 'mp3') {
-                // Capture audio chunks as raw audio-only webm and save as .mp3 safely
                 finalMimeType = 'audio/webm';
                 fileExt = 'mp3';
             } else if (targetFormat === 'wav') {
-                // Raw audio recording buffers setup
                 finalMimeType = 'audio/wav';
                 fileExt = 'wav';
             }
 
-            // Set UI Loading modal state
             document.getElementById('win-encoder').style.display = 'flex';
             document.getElementById('encode-progress').style.width = '0%';
             document.getElementById('encode-progress-percent').innerText = '0%';
             
-            // Adjust Stop Recording button visibility depending on free recording mode
             const btnStopFree = document.getElementById('btn-stop-free-record');
             if (mediaMode === 'camera' || (mediaMode === 'demo' && targetFormat !== 'wav')) {
-                btnStopFree.classList.remove('hidden');
+                if (btnStopFree) btnStopFree.classList.remove('hidden');
                 document.getElementById('encoder-window-title').innerText = "🔴 실시간 화면 녹화 중...";
             } else {
-                btnStopFree.classList.add('hidden');
+                if (btnStopFree) btnStopFree.classList.add('hidden');
                 document.getElementById('encoder-window-title').innerText = "⏳ 로파이 미디어 인코딩 중...";
             }
             
@@ -2049,12 +1984,10 @@
             recordedAudioLeft = [];
             recordedAudioRight = [];
 
-            // Reset media playback to head & guarantee Audio Graph is fully wired & unmuted!
             if (mediaMode === 'file' || mediaMode === 'audio') {
                 hiddenVideo.muted = false;
                 hiddenVideo.volume = 1.0;
 
-                // Ensure source node exists and is connected
                 if (!videoSourceNode) {
                     videoSourceNode = audioCtx.createMediaElementSource(hiddenVideo);
                 }
@@ -2063,26 +1996,20 @@
                 hiddenVideo.currentTime = 0;
                 hiddenVideo.play();
                 
-                // [수정사항] 영상 길이와 완벽히 똑같게 설정 (강제 제한시간 해제)
                 recordingDuration = (hiddenVideo.duration && !isNaN(hiddenVideo.duration) && isFinite(hiddenVideo.duration)) ? hiddenVideo.duration : 10;
             } else if (mediaMode === 'camera') {
-                // Free Camera Mode Recording: Can record indefinitely until stopped manually.
                 recordingDuration = 9999;
                 if (!cameraStream) {
                     startCamera();
                 }
             } else {
-                // Free Demo Mode Recording
                 recordingDuration = 10;
                 startDemoSynthesizer();
             }
 
-            // Direct local WAV encoder bypass (No real-time recording limitation via MediaRecorder)
             if (mediaMode === 'audio' && fileExt === 'wav') {
-                // Recorded directly viaonaudioprocess sample collection arrays
-                // We'll let the play loop run through the duration
+                // Direct sample collection logic handled in handleAudioDSP
             } else {
-                // standard MediaRecorder stream pipeline
                 const targetCaptureFPS = videoSettings.fps === 'original' ? 15 : videoSettings.fps;
                 const canvasStream = outputCanvas.captureStream(targetCaptureFPS);
                 const audioStream = destStreamNode.stream;
@@ -2109,27 +2036,25 @@
                     isEncoding = false;
                     document.getElementById('win-encoder').style.display = 'none';
 
-                    // Discard data and stop if user cancelled the process
                     if (isCancelled) {
                         recordedChunks = [];
                         return;
                     }
 
-                    // Save recorded array into a single downloadable file
                     const blob = new Blob(recordedChunks, { type: finalMimeType });
                     const videoUrl = URL.createObjectURL(blob);
                     const fileName = mediaMode === 'audio' ? `retro_audio_${audioSettings.preset}.${fileExt}` : `retro_144p_${audioSettings.preset}_degraded.${fileExt}`;
 
-                    // UPDATE: Set the download links inside the persistent Retro Download Manager
                     const dlBtn = document.getElementById('btn-real-download');
-                    dlBtn.href = videoUrl;
-                    dlBtn.download = fileName;
-                    document.getElementById('download-file-name-label').innerText = fileName;
+                    if (dlBtn) {
+                        dlBtn.href = videoUrl;
+                        dlBtn.download = fileName;
+                    }
+                    const labelEl = document.getElementById('download-file-name-label');
+                    if (labelEl) labelEl.innerText = fileName;
 
-                    // Open Web Downloader popup window to guarantee 100% bypass in secure sandboxed iframes (e.g., GitHub, Gist, Kakao)
                     openWindow('win-downloader');
 
-                    // Fallback to trigger programmatic click (works on unsecured/standard browsers as helper)
                     try {
                         const downloadLink = document.createElement('a');
                         downloadLink.href = videoUrl;
@@ -2138,14 +2063,13 @@
                         downloadLink.click();
                         document.body.removeChild(downloadLink);
                     } catch (err) {
-                        console.warn("Programmatic click blocked by sandbox, relying on download manager window:", err);
+                        console.warn("Programmatic click blocked by sandbox:", err);
                     }
                 };
 
                 mediaRecorder.start();
             }
 
-            // Progress tracking ticks
             let elapsedEncodeTime = 0;
             const progressInterval = setInterval(() => {
                 if (!isEncoding) {
@@ -2157,13 +2081,14 @@
                 
                 if (mediaMode === 'file' || mediaMode === 'audio') {
                     const percent = Math.min(Math.round((elapsedEncodeTime / recordingDuration) * 100), 99);
-                    document.getElementById('encode-progress').style.width = `${percent}%`;
-                    document.getElementById('encode-progress-percent').innerText = `${percent}%`;
+                    const barEl = document.getElementById('encode-progress');
+                    const textEl = document.getElementById('encode-progress-percent');
+                    if (barEl) barEl.style.width = `${percent}%`;
+                    if (textEl) textEl.innerText = `${percent}%`;
 
                     if (elapsedEncodeTime >= recordingDuration) {
                         clearInterval(progressInterval);
                         
-                        // Stop & Build WAV natively
                         if (mediaMode === 'audio' && fileExt === 'wav') {
                             buildAndDownloadLocalWav();
                         } else {
@@ -2174,11 +2099,11 @@
                         pauseMedia();
                     }
                 } else {
-                    // Free camera mode progress feedback
-                    document.getElementById('encode-progress').style.width = `100%`;
-                    document.getElementById('encode-progress-percent').innerText = `${elapsedEncodeTime.toFixed(1)}초 녹화됨 (중지 버튼을 누르십시오)`;
+                    const barEl = document.getElementById('encode-progress');
+                    const textEl = document.getElementById('encode-progress-percent');
+                    if (barEl) barEl.style.width = `100%`;
+                    if (textEl) textEl.innerText = `${elapsedEncodeTime.toFixed(1)}초 녹화됨 (중지 버튼을 누르십시오)`;
                     
-                    // Safety guard: Limit maximum free recording to 5 minutes to prevent out-of-memory browser crashes
                     if (elapsedEncodeTime >= 300) {
                         clearInterval(progressInterval);
                         showSystemAlert("최대 녹화 시간(5분)에 도달하여 녹화를 자동으로 중지하고 저장합니다.", "녹화 시간 초과");
@@ -2186,9 +2111,8 @@
                     }
                 }
             }, 500);
-        }
+        };
 
-        // Local WAV Compiler & Downloader
         function buildAndDownloadLocalWav() {
             isEncoding = false;
             document.getElementById('win-encoder').style.display = 'none';
@@ -2202,10 +2126,9 @@
             let leftBuffer = mergeBuffers(recordedAudioLeft);
             let rightBuffer = mergeBuffers(recordedAudioRight);
 
-            // Construct mock AudioBuffer for Wav Exporter
             let fakeBuffer = {
                 numberOfChannels: 2,
-                sampleRate: audioCtx.sampleRate,
+                sampleRate: audioCtx ? audioCtx.sampleRate : 44100,
                 getChannelData: function(chan) {
                     return chan === 0 ? leftBuffer : rightBuffer;
                 }
@@ -2215,16 +2138,16 @@
             const audioUrl = URL.createObjectURL(wavBlob);
             const fileName = `retro_audio_${audioSettings.preset}.wav`;
 
-            // Set link destinations inside Downloader UI
             const dlBtn = document.getElementById('btn-real-download');
-            dlBtn.href = audioUrl;
-            dlBtn.download = fileName;
-            document.getElementById('download-file-name-label').innerText = fileName;
+            if (dlBtn) {
+                dlBtn.href = audioUrl;
+                dlBtn.download = fileName;
+            }
+            const labelEl = document.getElementById('download-file-name-label');
+            if (labelEl) labelEl.innerText = fileName;
 
-            // Open popup to guarantee manual save possibility
             openWindow('win-downloader');
 
-            // Fallback standard link click
             try {
                 const downloadLink = document.createElement('a');
                 downloadLink.href = audioUrl;
@@ -2240,7 +2163,6 @@
             recordedAudioRight = [];
         }
 
-        // Helper functions for WAV Binary structuring
         function mergeBuffers(channelBuffer) {
             let totalLength = channelBuffer.reduce((acc, buf) => acc + buf.length, 0);
             let result = new Float32Array(totalLength);
@@ -2252,7 +2174,6 @@
             return result;
         }
 
-        // Interleave left and right channels for Stereo WAV
         function interleave(inputL, inputR) {
             let length = inputL.length + inputR.length;
             let result = new Float32Array(length);
@@ -2265,20 +2186,17 @@
             return result;
         }
 
-        // Write raw ASCII into dataview
         function writeString(view, offset, string) {
             for (let i = 0; i < string.length; i++) {
                 view.setUint8(offset + i, string.charCodeAt(i));
             }
         }
 
-        // Generate complete WAV RIFF structure binary Blob
         function bufferToWav(buffer) {
             let numOfChan = buffer.numberOfChannels,
                 btwSampleRate = buffer.sampleRate,
-                format = 1, // Raw uncompressed PCM
-                bitDepth = audioSettings.bitDepth <= 8 ? 8 : 16,
-                result;
+                format = 1,
+                bitDepth = audioSettings.bitDepth <= 8 ? 8 : 16;
             
             let resultBuffer;
             if (numOfChan === 2) {
@@ -2292,44 +2210,29 @@
             let bufferHeader = new ArrayBuffer(44 + byteLength);
             let view = new DataView(bufferHeader);
             
-            /* RIFF identifier */
             writeString(view, 0, 'RIFF');
-            /* file length */
             view.setUint32(4, 36 + byteLength, true);
-            /* RIFF type */
             writeString(view, 8, 'WAVE');
-            /* format chunk identifier */
             writeString(view, 12, 'fmt ');
-            /* format chunk length */
             view.setUint32(16, 16, true);
-            /* sample format */
             view.setUint16(20, format, true);
-            /* channel count */
             view.setUint16(22, numOfChan, true);
-            /* sample rate */
             view.setUint32(24, btwSampleRate, true);
-            /* byte rate */
             view.setUint32(28, btwSampleRate * numOfChan * (bitDepth / 8), true);
-            /* block align */
             view.setUint16(32, numOfChan * (bitDepth / 8), true);
-            /* bits per sample */
             view.setUint16(34, bitDepth, true);
-            /* data chunk identifier */
             writeString(view, 36, 'data');
-            /* chunk length */
             view.setUint32(40, byteLength, true);
             
             if (bitDepth === 8) {
                 for (let i = 0; i < bufferLength; i++) {
                     let sample = Math.max(-1, Math.min(1, resultBuffer[i]));
-                    // 8-bit WAV is unsigned PCM (range 0 to 255)
                     let val = Math.round((sample + 1) * 127);
                     view.setUint8(44 + i, val);
                 }
             } else {
                 for (let i = 0; i < bufferLength; i++) {
                     let sample = Math.max(-1, Math.min(1, resultBuffer[i]));
-                    // 16-bit WAV is signed PCM (range -32768 to 32767)
                     let val = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
                     view.setUint16(44 + i * 2, val, true);
                 }
@@ -2338,9 +2241,9 @@
             return new Blob([view], { type: 'audio/wav' });
         }
 
-        // Triggers stop for the manual recording session
-        function stopFreeRecording() {
-            if (mediaMode === 'audio' && document.getElementById('select-export-format').value === 'wav') {
+        window.stopFreeRecording = function() {
+            const expFormat = document.getElementById('select-export-format');
+            if (mediaMode === 'audio' && expFormat && expFormat.value === 'wav') {
                 buildAndDownloadLocalWav();
             } else {
                 if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -2348,10 +2251,9 @@
                 }
             }
             pauseMedia();
-        }
+        };
 
-        // Cancel encoding entirely without downloading corrupt file chunk
-        function cancelEncoding() {
+        window.cancelEncoding = function() {
             isCancelled = true;
             isEncoding = false;
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -2360,27 +2262,27 @@
             recordedAudioLeft = [];
             recordedAudioRight = [];
             document.getElementById('win-encoder').style.display = 'none';
-        }
+        };
 
-        // Boot-up trigger (auto-run visual loops on frame start)
         window.onload = function() {
             startVideoRenderer();
             
-            // Adjust position dynamically for narrow mobile devices
             const winConverter = document.getElementById('win-converter');
             const winReadme = document.getElementById('win-readme');
             if (window.innerWidth < 768) {
-                winReadme.style.display = 'none'; // Keep README closed by default on mobile to minimize clutter
+                if (winReadme) winReadme.style.display = 'none';
             } else {
-                // Desktop positions
-                winConverter.style.left = '10vw';
-                winConverter.style.top = '40px';
-                winReadme.style.left = '48vw';
-                winReadme.style.top = '100px';
+                if (winConverter) {
+                    winConverter.style.left = '10vw';
+                    winConverter.style.top = '40px';
+                }
+                if (winReadme) {
+                    winReadme.style.left = '48vw';
+                    winReadme.style.top = '100px';
+                }
             }
             
-            // Auto-focus main converter layout
-            bringToFront(winConverter);
+            if (winConverter) bringToFront(winConverter);
         };
     </script>
 </body>
